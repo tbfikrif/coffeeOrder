@@ -1,5 +1,7 @@
 package com.example.android.justjava;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -27,7 +29,15 @@ public class MainActivity extends AppCompatActivity {
         boolean hasChocolate = chocolateCheckBox.isChecked();
 
         int price = calculatePrice(hasWhippedCream, hasChocolate);
-        displayMessage(createOrderSummary(price, hasWhippedCream, hasChocolate, getNameText()));
+        String priceMessage = createOrderSummary(price, hasWhippedCream, hasChocolate, getNameText());
+
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Just Java order for " + getNameText());
+        intent.putExtra(Intent.EXTRA_TEXT, priceMessage);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     private String getNameText() {
@@ -40,15 +50,12 @@ public class MainActivity extends AppCompatActivity {
         quantityTextView.setText("" + number);
     }
 
-    private void displayMessage(String message) {
-        TextView orderSummaryTextView = findViewById(R.id.order_summary_text_view);
-        orderSummaryTextView.setText(message);
-    }
-
     /**
-     * @param addWhippedCream
-     * @param addChocolate
-     * @return
+     * Calculate the price
+     *
+     * @param addWhippedCream is whether or not to user wants whipped cream topping
+     * @param addChocolate is whether or not to user wants chocolate topping
+     * @return price calculated
      */
     private int calculatePrice(boolean addWhippedCream, boolean addChocolate) {
         int basePrice = 5;
@@ -71,11 +78,13 @@ public class MainActivity extends AppCompatActivity {
      * @return text summary
      */
     private String createOrderSummary(int price, boolean addWhippedCream, boolean addChocolate, String name) {
-        String summary = "Name: " + name;
-        summary += "\nAdd whipped cream? " + addWhippedCream;
-        summary += "\nAdd chocolate? " + addChocolate;
-        summary += "\nQuantity: " + quantity + "\nTotal: $" + price;
-        summary += "\nThank you!";
+        String summary = getString(R.string.order_summary_name, name);
+        summary += "\n" + getString(R.string.order_summary_whipped_cream, addWhippedCream);
+        summary += "\n" + getString(R.string.order_summary_chocolate, addChocolate);
+        summary += "\n" + getString(R.string.order_summary_quantity, quantity);
+        summary += "\n" + getString(R.string.order_summary_price,
+                NumberFormat.getCurrencyInstance().format(price));
+        summary += "\n" + getString(R.string.thank_you);
         return summary;
     }
 
